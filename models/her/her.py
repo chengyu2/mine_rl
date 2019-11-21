@@ -4,14 +4,14 @@ from typing import Tuple
 
 class HER:
 
-    def __init__(self, epsilon: int=0, strategy='future'):
+    def __init__(self, epsilon: int = 0, strategy='future'):
         """
 
         :param epsilon:
         :param strategy: String, expected one of ['future', 'standard']
         """
         self._epsilon = epsilon
-        self._replay_buffer = [] # TODO: improve to queue
+        self._replay_buffer = []  # TODO: improve to queue
         self.strategy = strategy
         allowed_strategies = {'future', 'standard'}
         assert strategy in allowed_strategies, f"Expected one of {allowed_strategies}"
@@ -52,7 +52,6 @@ class HER:
 
             hs_goal = self.get_hindsight_goal(i)
 
-
             if self.is_in_states(s_new, all_goals) or self.compare_state(s, hs_goal):
                 r = self.get_reward(s_new, hs_goal)
                 gamma = 0
@@ -64,7 +63,3 @@ class HER:
 
         self.clear()
         return new_replay_buffer
-
-
-
-

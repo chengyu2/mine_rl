@@ -48,23 +48,25 @@ def main():
     # Sample code for illustration, add your training code below
     env = gym.make(MINERL_GYM_ENV)
 
-#     actions = [env.action_space.sample() for _ in range(10)] # Just doing 10 samples in this example
-#     xposes = []
-#     for _ in range(1):
-#         obs = env.reset()
-#         done = False
-#         netr = 0
+    actions = [env.action_space.sample() for _ in range(10)] # Just doing 10 samples in this example
+    xposes = []
+    for _ in range(1):
+        obs = env.reset()
+        action = agent(obs)
+        observation, reward, done, info = env.step(action)
+        done = False
+        netr = 0
 
-#         # Limiting our code to 1024 steps in this example, you can do "while not done" to run till end
-#         while not done:
+        # Limiting our code to 1024 steps in this example, you can do "while not done" to run till end
+        while not done:
 
             # To get better view in your training phase, it is suggested
             # to register progress continuously, example when 54% completed
-            # aicrowd_helper.register_progress(0.54)
+            aicrowd_helper.register_progress(0.54)
 
             # To fetch latest information from instance manager, you can run below when you want to know the state
-            #>> parser.update_information()
-            #>> print(parser.payload)
+            # >> parser.update_information()
+            # >> print(parser.payload)
             # .payload: provide AIcrowd generated json
             # Example: {'state': 'RUNNING', 'score': {'score': 0.0, 'score_secondary': 0.0}, 'instances': {'1': {'totalNumberSteps': 2001, 'totalNumberEpisodes': 0, 'currentEnvironment': 'MineRLObtainDiamond-v0', 'state': 'IN_PROGRESS', 'episodes': [{'numTicks': 2001, 'environment': 'MineRLObtainDiamond-v0', 'rewards': 0.0, 'state': 'IN_PROGRESS'}], 'score': {'score': 0.0, 'score_secondary': 0.0}}}}
             # .current_state: provide indepth state information avaiable as dictionary (key: instance id)
