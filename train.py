@@ -48,8 +48,8 @@ def main():
     # Sample code for illustration, add your training code below
     env = gym.make(MINERL_GYM_ENV)
 
-#     actions = [env.action_space.sample() for _ in range(10)] # Just doing 10 samples in this example
-#     xposes = []
+    actions = [env.action_space.sample() for _ in range(10)] # Just doing 10 samples in this example
+    xposes = []
 #     for _ in range(1):
 #         obs = env.reset()
 #         done = False

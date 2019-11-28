@@ -37,8 +37,28 @@ def main():
             random_act['forward'] = 1
             random_act['jump'] = 1
             random_act['attack'] = 1
+            random_act['craft'] = 1
+            random_act['equip'] = 1
+            random_act['left'] = 0
+            random_act['nearbyCraft'] = 0
+            random_act['nearbySmelt'] = 0
+            random_act['place'] = 0
+            random_act['right'] = 0
+            random_act['sneak'] = 0
+            random_act['sprint'] = 0
+
+            print (random_act)
+            print (f'random_act: {random_act}')
             obs, reward, done, info = env.step(random_act)
+
+            print (f'obs: {obs}')
+            print (f'reward: {reward}')
+            print (f'done: {done}')
+            print (f'info: {info}')
+            break
             netr += reward
+
+        break
 
     env.close()
 
