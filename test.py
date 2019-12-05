@@ -40,7 +40,7 @@ def main():
             random_act['craft'] = 1
             random_act['equip'] = 1
             random_act['left'] = 0
-            random_act['nearbyCraft'] = 0
+            random_act['nearbyCraft'] = 100
             random_act['nearbySmelt'] = 0
             random_act['place'] = 0
             random_act['right'] = 0
