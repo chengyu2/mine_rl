@@ -15,6 +15,8 @@ import matplotlib.pyplot as plt
 
 import pandas as pd
 
+import copy
+
 ###
 import random
 from typing import Tuple
@@ -138,9 +140,14 @@ def train_level(lvl, state , goal, subgoal_testing, total_reward):
             # print('action is ', action)
             # print('about to take step. action is ', action)
             state_next, reward, done, _ = env.step(action)
+                # hacking a negative reward for dying
+            if done:
+                reward = -5.
+
             # print('...then')
             # print('state_next: ', state_next, ' reward: ', reward, ' done: ', done)
             total_reward += reward
+            #print(reward)
 
         if lvl > 0:
             if action_missed: # action is the same as the g_i-1
@@ -197,25 +204,25 @@ def sample(policy, state, goal, subgoal_testing, lvl):
             action = np.random.choice( 2, 1, p=F.softmax(policy.forward(policy_input)).detach().numpy()[0] )[0]
     else:
         if subgoal_testing:
-            action = policy.forward( policy_input ).detach().numpy()[0]
+            action = policy.forward(policy_input).detach().numpy()[0]
         else:
-            action = policy.forward(policy_input).detach().numpy()[0] + np.array([random.random() - 0.5 for i in range(4)])
+            action = policy.forward(policy_input).detach().numpy()[0] + np.array([ 1.*(random.random() - 0.5) for i in range(4)])
 
         # action = top_goal
     return action
 
 
-num_episodes=5000
+num_episodes = 2000
 num_levels = 3
 top_goal = np.array([0,0,0,0])
-H=30 #40
+H = 50 #40
 lamb = 0.1
 
 learning_rate = 0.001
 
-replay_buffer = [[], [], []]
-her_storage = [[], [], []]
-her_storage = [HER(), HER(), HER()]
+replay_buffer = [ [] for lvl in range(num_levels) ]
+her_storage = [ [] for lvl in range(num_levels) ]
+her_storage = [ HER() for lvl in range(num_levels) ]
 
 gamma = 0.9
 
@@ -237,6 +244,8 @@ for i in range(num_levels):
     p_optimizers.append(optim.Adam(pol.parameters(), lr=learning_rate))
     q_optimizers.append(optim.Adam(q_n.parameters(), lr=learning_rate))
 
+policies_prime = copy.deepcopy(policies)
+Q_networks_prime = copy.deepcopy(Q_networks)
 
 
 def update_parameters():
@@ -252,8 +261,12 @@ def update_parameters():
         y = []
         Qi_vec = []
 
-        Q_lvl = Q_lvl_prime = Q_networks[lvl] # for now
-        pi_lvl = pi_lvl_prime = policies[lvl] # for now
+        Q_prime_lvl = Q_networks_prime[lvl]
+        pi_prime_lvl = policies_prime[lvl]
+
+        Q_lvl = Q_networks[lvl]
+        pi_lvl = policies[lvl]
+
         Q_opt_lvl = q_optimizers[lvl]
         p_opt_lvl = p_optimizers[lvl]
 
@@ -264,10 +277,10 @@ def update_parameters():
 
             Qi_vec.append( Variable(Q_lvl(net_input), requires_grad=True) )
 
-            state_action_goal = np.concatenate((state, sample(pi_lvl, next_state, goal, False, lvl).reshape((-1,)), goal))
+            state_action_goal = np.concatenate((state, sample(pi_prime_lvl, next_state, goal, False, lvl).reshape((-1,)), goal))
             net_input = torch.from_numpy(np.expand_dims(state_action_goal, axis=0)).float()
 
-            yn = Variable( reward + Q_lvl(net_input), requires_grad=True ) # turn this shit into a tensor
+            yn = Variable( reward + Q_prime_lvl(net_input), requires_grad=True ) # turn this thing into a tensor
 
 ##
             # if lvl == 0:
@@ -309,7 +322,7 @@ def update_parameters():
 
 ###
                 weights = []
-                for act in reversed(range(2)): #all_actions: # how do we do this? ##########
+                for act in range(2): #all_actions: # how do we do this? ##########
                     ac = np.int64(act)
                     state_action_goal = np.concatenate((state, ac.reshape((-1,)), goal))
                     net_input = torch.from_numpy(np.expand_dims(state_action_goal, axis=0)).float()
@@ -336,14 +349,22 @@ def update_parameters():
         # trainable_parameters: List[tf.Variable] = self.model.trainable_variables()
         # optimizer.update_parameters(trainable_parameters, Lcritic)
         # optimizer.update_parameters(trainable_parameters, Lactor)
-        # Updated the network for level i. Now it’s time to update the target network
-        # Q_lvl_prime.trainableVariables  = (1-tau) * Q_lvl_prime.trainableVariables  + tau * Q_lvl.trainableVariables # ?
-        # pi_lvl_prime.trainableVariables = (1-tau) * pi_lvl_prime.trainableVariables + tau * pi_lvl.trainableVariables # ?
+
+        # Updated the network for level lvl. Now it’s time to update the target network
+        #Q_prime_lvl  = (1-tau) * Q_prime_lvl  + tau * Q_lvl # ?
+        #pi_prime_lvl = (1-tau) * pi_prime_lvl + tau * pi_lvl # ?
+
+
 
 
 rewards = []
 # main loop
 for episode in range(num_episodes):
+
+    if episode % 1 == 0:
+        policies_prime = copy.deepcopy(policies)
+        Q_networks_prime = copy.deepcopy(Q_networks)
+
     env = gym.make('CartPole-v0')
     state = env.reset()
     _, total_reward, _ = train_level(2, state, top_goal, False, 0)
